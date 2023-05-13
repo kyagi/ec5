@@ -1,0 +1,18 @@
+#!/bin/bash
+
+export instance_type=${1}
+export count=${2:-1}
+export currency=${3:-"USD"}
+
+# on_demand
+echo -e "\033[1;31m# OnDemand cost \033[0m"
+# xh localhost:8000/${instance_type}?count=${count} | jq -cr ".on_demand[]|select(.currency == \"${currency}\") | [.per_day, .per_month, .per_year] | @tsv" | while read d m y q; do printf "%'.f %'.f %'.f %s %s %s %'.f\n" ${d} ${m} ${y} "n/a" "n/a" "n/a" ${count}; done | ruby -npe 'BEGIN { print "daily monthly annually upfront term initial quantity\n";}' | column -t
+xh localhost:8000/${instance_type}?count=${count} | jq -cr ".on_demand[]|select(.currency == \"${currency}\") | [.per_day, .per_month, .per_year, .upfront, .term, .initial, .quantity] | @tsv" | ruby -ane 'printf("%7s %10s %10s %10s %10s %10s %8s\n", $F[0], reformat($F[1]), reformat($F[2]), "n/a", "n/a", "n/a", ENV["count"]); BEGIN { printf("%7s %10s %10s %10s %10s %10s %8s\n", "daily", "monthly", "annually", "upfront", "term", "initial", "quantity"); def reformat(s) s.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, "\\1,").reverse; end; }'
+
+echo ""
+
+# reserved
+echo -e "\033[1;32m# Reserved costs \033[0m"
+xh localhost:8000/${instance_type}?count=${count} | jq -cr ".reserved[][]|select(.currency == \"${currency}\") | [.per_day, .per_month, .per_year, .upfront, .term, .initial, .quantity] | @tsv" | ruby -ane 'printf("%7s %10s %10s %10s %10s %10s %8s\n", $F[0], reformat($F[1]), reformat($F[2]), $F[3], $F[4], reformat($F[5]), $F[6]); BEGIN { printf("%7s %10s %10s %10s %10s %10s %8s\n", "daily", "monthly", "annually", "upfront", "term", "initial", "quantity"); def reformat(s) s.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, "\\1,").reverse; end; }'
+
+echo ""
