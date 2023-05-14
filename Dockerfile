@@ -1,4 +1,7 @@
-FROM rust:1.67 as builder
+FROM --platform=$BUILDPLATFORM rust:1.67 as builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" > /log
 WORKDIR app
 COPY . .
 RUN cargo install --path .

@@ -73,10 +73,7 @@ $ cd ec5
 
 3. Build the customized image and run it.
 ```
-➜ docker buildx build --platform linux/amd64 -t ec5:customized .
-➜ # or
-➜ docker buildx build --platform linux/arm64 -t ec5:customized .
-
+➜ docker image build -t ec5:customized .
 ➜ docker run --rm -p 8000:8000 --name ec5-customized -it ec5:customized
 ```
 
